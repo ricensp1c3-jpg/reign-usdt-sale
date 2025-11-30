@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, sendEmailVerification } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import QRCode from 'qrcode';
 import { auth, db } from '../firebase';
 
@@ -10,17 +10,10 @@ export default function Home() {
   const [user, setUser] = useState(null);
   const [points, setPoints] = useState(0);
   const [qr, setQr] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  const wallet = process.env.NEXT_PUBLIC_USDT_WALLET || '0x9B7eF9D7c52f3D9B5203f6D9f5dF6d9e5f6d9e5f';
-  const price = 0.021;
+  const wallet = "bnb1jxjfrxx4v4whfx239paj3k6ecpjec7k4qc3gfs";
 
   useEffect(() => {
     QRCode.toDataURL(wallet).then(setQr);
-    const urlParams = new URLSearchParams(window.location.search);
-    const ref = urlParams.get('ref');
-    if (ref) localStorage.setItem('referrer', ref);
-
     onAuthStateChanged(auth, async (u) => {
       if (u) {
         setUser(u);
@@ -31,45 +24,34 @@ export default function Home() {
   }, []);
 
   const register = async () => {
-    setLoading(true);
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await sendEmailVerification(cred.user);
-      const referrer = localStorage.getItem('referrer');
-      await setDoc(doc(db, 'users', cred.user.uid), {
-        email,
-        points: 0,
-        referrer: referrer || null,
-        createdAt: new Date()
-      });
-      alert('Registered! Check your email for verification.');
+      await setDoc(doc(db, 'users', cred.user.uid), { email, points: 0, createdAt: new Date() });
+      alert("Registered! Welcome to $REIGNCOIN 👑");
     } catch (e) { alert(e.message); }
-    setLoading(false);
   };
 
   const login = async () => {
-    setLoading(true);
     try { await signInWithEmailAndPassword(auth, email, password); }
     catch (e) { alert(e.message); }
-    setLoading(false);
   };
 
-  const calculate = (usdt) => Math.floor(usdt / price).toLocaleString();
+  const format = (n) => n.toLocaleString();
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold">$REIGNCOIN Private Sale</h1>
-            <p className="mt-2 text-xl">1 $REIGNCOIN = 0.021 USDT</p>
-            <p className="text-green-400">Distribution: January 30, 2026</p>
-          </div>
-          <input className="w-full p-3 bg-gray-900 rounded" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-          <input className="w-full p-3 bg-gray-900 rounded" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
-          <div className="flex gap-4">
-            <button onClick={register} disabled={loading} className="flex-1 bg-green-600 hover:bg-green-700 p-3 rounded font-bold">{loading ? '...' : 'Register'}</button>
-            <button onClick={login} disabled={loading} className="flex-1 bg-blue-600 hover:bg-blue-700 p-3 rounded font-bold">{loading ? '...' : 'Login'}</button>
+      <div className="min-h-screen bg-black text-white flex items-center justify-center p-6">
+        <div className="max-w-lg w-full text-center">
+          <h1 className="text-6xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">$REIGNCOIN</h1>
+          <p className="text-2xl mt-4">Private Sale • 1 $REIGN = 0.021 USDT</p>
+          <p className="text-yellow-400 text-lg mt-2">Distribution: January 30, 2026</p>
+          <div className="mt-10 space-y-4">
+            <input className="w-full p-4 bg-gray-900 rounded-lg text-white" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+            <input className="w-full p-4 bg-gray-900 rounded-lg" type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} />
+            <div className="flex gap-4">
+              <button onClick={register} className="flex-1 bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-4 rounded-lg text-xl">REGISTER</button>
+              <button onClick={login} className="flex-1 bg-gray-700 hover:bg-gray-600 py-4 rounded-lg text-xl">LOGIN</button>
+            </div>
           </div>
         </div>
       </div>
@@ -78,23 +60,27 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-black text-white p-6">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold text-center mb-8">Welcome, {user.email}</h1>
-        <div className="bg-gray-900 rounded-xl p-8 text-center space-y-6">
-          <div className="text-5xl font-bold text-green-400">{points.toLocaleString()} Points</div>
-          <p className="text-xl">= {points.toLocaleString()} $REIGNCOIN on Jan 30</p>
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-10">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text text-transparent">$REIGNCOIN</h1>
+          <p className="text-2xl mt-2">Welcome, {user.email.split('@')[0]} 👑</p>
+        </div>
 
-          <div className="grid grid-cols-3 gap-4 my-8">
-            <div className="bg-gray-800 p-4 rounded"><p className="text-sm">100 USDT →</p><p className="text-2xl font-bold">{calculate(100)}</p></div>
-            <div className="bg-gray-800 p-4 rounded"><p className="text-sm">500 USDT →</p><p className="text-2xl font-bold">{calculate(500)}</p></div>
-            <div className="bg-gray-800 p-4 rounded"><p className="text-sm">1000 USDT →</p><p className="text-2xl font-bold">{calculate(1000)}</p></div>
+        <div className="bg-gradient-to-br from-gray-900 to-black border border-yellow-600 rounded-2xl p-8 text-center">
+          <h2 className="text-6xl font-bold text-yellow-400">{format(points)} Points</h2>
+          <p className="text-2xl mt-2">= {format(points)} $REIGNCOIN on Jan 30</p>
+
+          <div className="grid grid-cols-3 gap-6 my-10 text-center">
+            <div className="bg-gray-800 p-6 rounded-xl"><p className="text-3xl font-bold text-green-400">{format(4762)}</p><p>100 USDT</p></div>
+            <div className="bg-gray-800 p-6 rounded-xl"><p className="text-3xl font-bold text-green-400">{format(23810)}</p><p>500 USDT</p></div>
+            <div className="bg-gray-800 p-6 rounded-xl"><p className="text-3xl font-bold text-green-400">{format(47619)}</p><p>1000 USDT</p></div>
           </div>
 
-          <p className="text-lg">Send USDT (BNB Chain) to:</p>
-          <code className="block bg-gray-800 p-4 rounded break-all font-mono">{wallet}</code>
-          {qr && <img src={qr} alt="QR" className="mx-auto w-64 h-64" />}
-          <p className="text-yellow-400">Important: Use memo / comment: <strong>{email}</strong></p>
-          <p className="text-sm text-gray-400">Points auto-added in &lt;15 seconds when we receive your USDT</p>
+          <p className="text-xl mb-4">Send USDT (BNB Chain) →</p>
+          <code className="block bg-gray-900 p-5 rounded-lg font-mono text-yellow-300 break-all text-lg">{wallet}</code>
+          {qr && <img src={qr} alt="QR" className="mx-auto mt-6 w-80 h-80 border-4 border-yellow-500 rounded-2xl" />}
+          <p className="mt-6 text-red-400 font-bold text-xl">Memo / Comment: {user.email}</p>
+          <p className="mt-4 text-gray-400">Points added manually within 12h (or instantly if you tell me)</p>
         </div>
       </div>
     </div>
