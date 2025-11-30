@@ -54,7 +54,10 @@ export default function Home() {
     alert(`Locked ${newPoints.toLocaleString()} points!\nSend ${amount} USDT to:\n${WALLET}\nMemo: ${user.email}`);
   };
 
-  const copyWallet = () => { navigator.clipboard.writeText(WALLET); alert("Wallet copied!"); };
+  const copyWallet = () => {
+    navigator.clipboard.writeText(WALLET);
+    alert("Wallet copied!");
+  };
 
   if (!user) {
     return (
@@ -96,7 +99,7 @@ export default function Home() {
         <p className="text-3xl mb-8">Welcome, {user.email.split('@')[0]}</p>
 
         <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-12 border-4 border-yellow-600 shadow-2xl">
-          <h2 className="text-9xl font-bold text-yellow-400">{(punten + pending).toLocaleString()}</h2>
+          <h2 className="text-9xl font-bold text-yellow-400">{(points + pending).toLocaleString()}</h2>
           <p className="text-4xl mt-4 mb-10">Your Points</p>
 
           <input
